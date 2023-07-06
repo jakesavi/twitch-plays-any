@@ -2,6 +2,7 @@ import json
 import socket
 import Secret
 import threading
+from time import sleep
 from pynput import keyboard
 ##EXAMPLE CODE TAKEN FROM THIS SCRIPT. THIS SCRIPT WAS USE AS A LAUNCHING POINT TO EXPAND THE SOCKET AVAILABILITY.
 ##EXAMPLE CODE: 
@@ -33,6 +34,8 @@ class Twitch:
         self.control : dict = data.get("Controls")
         print(self.control.get(list(self.control.keys())[0]))
         self.irc: socket = irc
+        #Set up the keyboard controller.
+        self.keyControl = keyboard.Controller()
 
 
 
@@ -75,22 +78,24 @@ class Twitch:
                 if ("PRIVMSG" and "$" in line):
                     #Send Line to Handler Ensure that another thread runs this...
                     command: str = line.split('$')[1]
-                    command: str = command.strip("\n")
+                    command: str = command.strip("\n\r")
                     
-                    newThread = threading.Thread(target=self.Handler, args=[command]) 
+                    newThread = threading.Thread(target=self.Handler, args=[command.lower()]) 
                     newThread.run()
 
-#TODO Fix the fucking handler. This is killing me... :(
     def Handler(self, msg:str):
         #Handler Needs to check the Json blob of data and ensure that it exists in the dictionary
         #Had a weird bug here. Couldn't use in on this json blob?????
-        found=False
-        for key, val in self.control.items():
-            if key == msg:
-                found=True
-                print("I FOUND THE VALUE")
-            else:
-                continue
+        if (msg in self.control):
+            #Do Control thing here
+            self.keyControl.press(msg)
+            sleep(1)
+            self.keyControl.release(msg)
+        else:
+            #Terminate the thread here
+            return
+
+
 
 def main():
     t: Twitch = Twitch()
