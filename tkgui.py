@@ -16,7 +16,7 @@ class App:
         self.main = Tk(className="Main") #Run Main HERE So we can access the main thread elsewhere throughout the object
         self.MadeJson: dict[str, any] = {}
         self.WindowLaunch()
-        
+        self.showJson: Text #Defined in "WindowLaunch"
 
 
     def FormNewJsonWindow(self) -> None:
@@ -32,7 +32,7 @@ class App:
         DoneButton: ttk.Button = ttk.Button(popUp, text="Done",command=lambda: self.CloseAndSaveJSON(title.get(), description.get(),window=newJsonInfo))
         DoneButton.grid(row=2,column=1)
         popUp.mainloop() 
-
+        
 
     def FormNewJson(self):
         self.t1.run()
@@ -45,21 +45,28 @@ class App:
         with open(f"{self.MadeJson['Title']}.json", "w") as f:
             f.write(json.dumps(self.MadeJson))
             f.close()
-        
-
+        #Now Write to ShowJson
+        self.showJson.config(state=NORMAL)
+        self.showJson.delete("1.0",END)
+        self.showJson.insert("1.0",json.dumps(self.MadeJson))
+        self.showJson.config(state=DISABLED)
 
 
     def WindowLaunch(self) -> None: 
-        about: str = """Welcome to Twitch plays any!\n
-        How to use: Form a JSON utilizing the key-capture tool below. You can also Import and Export your own. Once you make a new JSON it will appear in the text field below.\n
+        about: str = """Welcome to Twitch plays any!
+        How to use: Form a JSON utilizing the key-capture tool below. You can also Import and Export your own. Once you make a new JSON it will appear in the text field below.
         NOTE: The text field below is not editable. If you wish to edit the JSON directly simply open it in notepad."""
         frm= ttk.Frame(self.main, padding=50)
         frm.grid(padx=10,pady=10)
         ttk.Label(frm, text=about).grid(column=0,row=0)
-        #TODO Change this widget to be READONLY and 
-        ttk.Label(frm, text=json.dumps(self.MadeJson), background="white", width=25).grid(column=0,row=1)
-        ttk.Button(frm, text="New JSON", command=self.FormNewJson ).grid(column=1, row=1)
-        ttk.Button(frm, text="Quit", command=self.main.destroy).grid(column=2,row=2)
+        #TODO Change this widget to be READONLY and UPDATE showJson widgit to make it update while the user inputs new keys.
+        self.showJson:Text = Text(frm)
+        self.showJson.grid(column=0,row=1)
+        self.showJson.insert("1.0",json.dumps(self.MadeJson))
+        self.showJson.config(state=DISABLED)
+        print(json.dumps(self.MadeJson))
+        ttk.Button(frm, text="New JSON", command=self.FormNewJson ).grid(column=0, row=2)
+        ttk.Button(frm, text="Quit", command=self.main.destroy).grid(column=1,row=2)
         self.main.mainloop()
 
 
