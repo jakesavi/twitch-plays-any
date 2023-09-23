@@ -3,11 +3,34 @@ from tkinter import ttk
 from tkinter.scrolledtext import ScrolledText  
 import threading
 import json
-#TODO Figure out how to have multiple displays.
-#Solution. Create Multiple threads using python threads.
-#ISSUES: For some god damn reason my python interpriter really hates widget types form tkinter. Why? No idea.
-# Right now the compiler is saying they are "None_Type" why? who tf knows...
-# SOLVED: Python takes last function evaluated type in this case. grid() as seen in function "FormNewJsonWindow(Self)"
+from pynput import keyboard, mouse
+#Creating a new Object for keyboard capture. Naming it as such
+class KeyboardCapture:
+    #Key is a weird type that is included in keyboard. Look for it.
+    def start(self):
+        with keyboard.Listener(
+            on_press=self.on_press,
+            on_release=None) as self.listener:
+            self.listener.join()
+
+
+    def end(self):
+        #Terminate existing listener
+        self.listener.stop()
+
+
+    def on_press(self, key: keyboard.Key):
+        try:
+            #Alphanumeric keys go here!
+
+            #TODO  Replace this with actions.
+            print('alphanumeric key {0} pressed'.format(key.char))
+        except AttributeError:
+            #Special keys go here.
+            print('special key {0} pressed'.format(key)) 
+
+
+
 titleDisplay:str = None
 DescriptionDisplay:str = None
 class App:
@@ -59,7 +82,6 @@ class App:
         frm= ttk.Frame(self.main, padding=50)
         frm.grid(padx=10,pady=10)
         ttk.Label(frm, text=about).grid(column=0,row=0)
-        #TODO Change this widget to be READONLY and UPDATE showJson widgit to make it update while the user inputs new keys.
         self.showJson:Text = Text(frm)
         self.showJson.grid(column=0,row=1)
         self.showJson.insert("1.0",json.dumps(self.MadeJson))
@@ -70,12 +92,14 @@ class App:
         self.main.mainloop()
 
 
-
-
+#Next I need to capture keys in order for this to work.
+#Learn how the keyboard listener works. Once I figure this out. I can capture keys,
+#Making it easy for people to use.
 
 
 def Main():
-    instance:App = App()
+    #instance:App = App()
+    listener:KeyboardCapture = KeyboardCapture()
 
 
 Main()
