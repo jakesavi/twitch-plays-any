@@ -6,7 +6,8 @@ import json
 from pynput import keyboard, mouse
 #Creating a new Object for keyboard capture. Naming it as such
 class KeyboardCapture:
-    #Key is a weird type that is included in keyboard. Look for it.
+    queueKey: list[keyboard.Key] = []
+    #Key is a weird type that is included in keyboard. 
     def start(self):
         with keyboard.Listener(
             on_press=self.on_press,
@@ -20,28 +21,31 @@ class KeyboardCapture:
 
 
     def on_press(self, key: keyboard.Key):
-        try:
-            #Alphanumeric keys go here!
-
-            #TODO  Replace this with actions.
-            print('alphanumeric key {0} pressed'.format(key.char))
-        except AttributeError:
-            #Special keys go here.
-            print('special key {0} pressed'.format(key)) 
+        #Input key to key queue, pass off to other thread. Kinda non-blocking blocking??
+        if key == keyboard.Key.esc:
+            self.end() #If esc is pressed assume a kill listener request.
+            print(self.queueKey)
+        else:
+            self.queueKey.append(key)
 
 
 
-titleDisplay:str = None
-DescriptionDisplay:str = None
+
 class App:
+    MadeJson : dict = {}
+    KeyboardListener : KeyboardCapture = KeyboardCapture()
+    main :Tk
     def __init__(self) -> None:
-        self.t1 = threading.Thread(target=self.FormNewJsonWindow)
-        self.main = Tk(className="Main") #Run Main HERE So we can access the main thread elsewhere throughout the object
-        self.MadeJson: dict[str, any] = {}
+        #Threads manage multiple windows. Can't put more than one frame on a thread.
+
+        self.t1: threading.Thread = threading.Thread(target=self.FormNewJsonWindow)
+        self.t2: threading.Thread = threading.Thread(target=self.addButton)
+        #End of window threads
+        self.main = Tk(className="Twitch Plays Any") #Run Main HERE So we can access the main thread elsewhere throughout the object
         self.WindowLaunch()
         self.showJson: Text #Defined in "WindowLaunch"
-
-
+        
+     
     def FormNewJsonWindow(self) -> None:
         newJsonInfo = Tk(className="New Json")
         popUp= ttk.Frame(newJsonInfo, padding=25)
@@ -59,7 +63,8 @@ class App:
 
     def FormNewJson(self):
         self.t1.run()
-
+    def addKey(self):
+        self.t2.run()
     def CloseAndSaveJSON(self, title:str, description:str, window:Tk):
         self.MadeJson={"Title": title, "Description": description, "Controls": {}}
         window.destroy()
@@ -79,18 +84,30 @@ class App:
         about: str = """Welcome to Twitch plays any!
         How to use: Form a JSON utilizing the key-capture tool below. You can also Import and Export your own. Once you make a new JSON it will appear in the text field below.
         NOTE: The text field below is not editable. If you wish to edit the JSON directly simply open it in notepad."""
-        frm= ttk.Frame(self.main, padding=50)
+        frm= ttk.Frame(self.main,name="twitch plays anything", padding=50)
         frm.grid(padx=10,pady=10)
         ttk.Label(frm, text=about).grid(column=0,row=0)
         self.showJson:Text = Text(frm)
         self.showJson.grid(column=0,row=1)
         self.showJson.insert("1.0",json.dumps(self.MadeJson))
         self.showJson.config(state=DISABLED)
-        print(json.dumps(self.MadeJson))
+        #print(json.dumps(self.MadeJson))
         ttk.Button(frm, text="New JSON", command=self.FormNewJson ).grid(column=0, row=2)
-        ttk.Button(frm, text="Quit", command=self.main.destroy).grid(column=1,row=2)
+        ttk.Button(frm, text="Add Button", command=self.addKey).grid(column=1,row=2)
+        ttk.Button(frm, text="Quit", command=self.main.destroy).grid(column=2,row=2)
         self.main.mainloop()
 
+    def addButton(self):
+        #So a noticably a dictionary must contain at least one element before it
+        #Returns true. yes its dumb. But its shorter and cleaner.
+        if self.MadeJson:
+            print("Listener Goes here!")
+        else:
+            buttonInsertInfo = Tk(className="err")
+            err:ttk.Frame = ttk.Frame(buttonInsertInfo, name="error", padding=5)
+            err.grid()
+            ttk.Label(err, text="Please click form a New Json before adding key binds.").grid(column=0,row=0)
+            buttonInsertInfo.mainloop()
 
 #Next I need to capture keys in order for this to work.
 #Learn how the keyboard listener works. Once I figure this out. I can capture keys,
@@ -98,8 +115,8 @@ class App:
 
 
 def Main():
-    #instance:App = App()
-    listener:KeyboardCapture = KeyboardCapture()
+    instance:App = App()
+    
 
 
 Main()
