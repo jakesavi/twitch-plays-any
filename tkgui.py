@@ -27,6 +27,7 @@ class KeyboardCapture:
             print(self.queueKey)
         else:
             self.queueKey.append(key)
+            self.end()
 
 
 
@@ -53,9 +54,9 @@ class App:
         ttk.Label(popUp, text="Title").grid(row=0)
         ttk.Label(popUp, text="Description").grid(row=1)
         title : ttk.Entry = ttk.Entry(popUp)
-        title.grid(row=0,column=1)
+        title.grid(row=0,column=0)
         description: ttk.Entry = ttk.Entry(popUp)
-        description.grid(row=1,column=1)
+        description.grid(row=1,column=0)
         DoneButton: ttk.Button = ttk.Button(popUp, text="Done",command=lambda: self.CloseAndSaveJSON(title.get(), description.get(),window=newJsonInfo))
         DoneButton.grid(row=2,column=1)
         popUp.mainloop() 
@@ -84,24 +85,41 @@ class App:
         about: str = """Welcome to Twitch plays any!
         How to use: Form a JSON utilizing the key-capture tool below. You can also Import and Export your own. Once you make a new JSON it will appear in the text field below.
         NOTE: The text field below is not editable. If you wish to edit the JSON directly simply open it in notepad."""
-        frm= ttk.Frame(self.main,name="twitch plays anything", padding=50)
-        frm.grid(padx=10,pady=10)
-        ttk.Label(frm, text=about).grid(column=0,row=0)
+        frm= ttk.Frame(self.main,name="twitch plays anything")
+        frm.grid()
+        ttk.Label(frm, text=about).grid(column=0,row=0, columnspan=20, pady=2)
         self.showJson:Text = Text(frm)
-        self.showJson.grid(column=0,row=1)
+        self.showJson.grid(column=0,row=1,columnspan=20,pady=2)
         self.showJson.insert("1.0",json.dumps(self.MadeJson))
         self.showJson.config(state=DISABLED)
         #print(json.dumps(self.MadeJson))
-        ttk.Button(frm, text="New JSON", command=self.FormNewJson ).grid(column=0, row=2)
-        ttk.Button(frm, text="Add Button", command=self.addKey).grid(column=1,row=2)
-        ttk.Button(frm, text="Quit", command=self.main.destroy).grid(column=2,row=2)
+        ttk.Button(frm, text="New JSON", command=self.FormNewJson ).grid(column=9, row=2,sticky=W)
+        ttk.Button(frm, text="Add Button", command=self.addKey).grid(column=10,row=2,sticky=W)
+        ttk.Button(frm, text="Quit", command=self.main.destroy).grid(column=11,row=2,sticky=W)
         self.main.mainloop()
 
     def addButton(self):
         #So a noticably a dictionary must contain at least one element before it
         #Returns true. yes its dumb. But its shorter and cleaner.
         if self.MadeJson:
-            print("Listener Goes here!")
+            buttonInsertInfo = Tk(className="listening...")
+            button:ttk.Frame = ttk.Frame(buttonInsertInfo, name="listening...",padding=5)
+            button.grid()
+            ttk.Label(button, text="Listening... Press esc to cancel, press any key to bind a key.").grid()
+            self.KeyboardListener.start()
+            #Please remember the listner dies after every check. Also its technically blocking...
+            if len(KeyboardCapture.queueKey) == 0:
+                return
+            else:
+                newKey: keyboard.Key = self.KeyboardListener.queueKey.pop()
+                button.destroy()
+                newbutton: ttk.Frame = ttk.Frame(buttonInsertInfo, name="new button")
+                newbutton.grid()
+                ttk.Label(newbutton, text=f"New Key: {newKey}\n what should twitch chat type to activate this key?").grid(column=0,row=0,columnspan=2)
+                ttk.Label(newbutton, text= "What chat types(Case Sensitive):").grid(column=0,row=1) 
+                chatEntry:ttk.Entry = ttk.Entry(newbutton)
+                chatEntry.grid(column=1,row=1,columnspan=1)
+                #Add save and close button here!
         else:
             buttonInsertInfo = Tk(className="err")
             err:ttk.Frame = ttk.Frame(buttonInsertInfo, name="error", padding=5)
@@ -109,9 +127,7 @@ class App:
             ttk.Label(err, text="Please click form a New Json before adding key binds.").grid(column=0,row=0)
             buttonInsertInfo.mainloop()
 
-#Next I need to capture keys in order for this to work.
-#Learn how the keyboard listener works. Once I figure this out. I can capture keys,
-#Making it easy for people to use.
+
 
 
 def Main():
