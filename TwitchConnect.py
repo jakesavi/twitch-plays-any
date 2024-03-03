@@ -3,7 +3,6 @@ import time
 import random
 import threading
 import webbrowser
-from Authenticate import Authenticate
 class Twitch:
     sock: socket = None
     channel: str = "byte1223"
