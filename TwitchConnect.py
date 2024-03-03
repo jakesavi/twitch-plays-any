@@ -6,7 +6,6 @@ import webbrowser
 class Twitch:
     sock: socket = None
     channel: str = "byte1223"
-    authenticator: Authenticate = Authenticate #Creating class instance in self for data storage.
     # Connect to the IRC server utilizing socket connection. 
     clientToken: str = 'bm5jz15swcewiz2igffjr24h7ijkdl'
     def twitch_connect(self, channel: str) -> None:
