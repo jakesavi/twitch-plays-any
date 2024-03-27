@@ -2,7 +2,6 @@ import socket
 import time
 import random
 import threading
-import re
 import webbrowser
 
 
@@ -39,9 +38,11 @@ class Twitch:
         while True:
             lines = self.BlockToList(self.SOCK.recv(1024).decode())
             for line in lines:
-                print(line.split(' :'))
-                if '376' in line:
+                LineParsed: list[str] = (line.split(' :'))
+                print(LineParsed[0])
+                if '376' in LineParsed[0]:
                     self.SOCK.send(("JOIN #%s\r\n" % self.CHANNEL).encode())
+
                 
 
     #After recieving the data, figure out parsing. Now we need to ensure we are readding chat.  
