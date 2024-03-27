@@ -9,7 +9,6 @@ import webbrowser
 class Twitch:
     SOCK: socket.socket
     CHANNEL: str = "byte1223"
-    RE : str = "(?<=\\:)(.*?)(?=\\:)" #Regular Ex. To capture command between two colons Ridding the chat. Focusing only on API response.
     # Connect to the IRC server utilizing socket connection. 
     CTOKEN: str = 'bm5jz15swcewiz2igffjr24h7ijkdl'
     #This queue is used by the executer thread.
@@ -35,20 +34,21 @@ class Twitch:
         time.sleep(delay)
         self.twitch_connect()
         
-        
+    # Recieves the message and acts accourding to the recieved command.
+    def recieve_message(self)->None:
+        while True:
+            lines = self.BlockToList(self.SOCK.recv(1024).decode())
+            for line in lines:
+                print(line.split(' :'))
+                if '376' in line:
+                    self.SOCK.send(("JOIN #%s\r\n" % self.CHANNEL).encode())
+                
+
     #After recieving the data, figure out parsing. Now we need to ensure we are readding chat.  
     #self.SOCK.send(("JOIN #%s\r\n" % self.CHANNEL).encode())  
-    def recieve_message(self) -> None:
-        while True:
-            data : bytes = self.SOCK.recv(1024)
-            if data:
-                currentMessage : str = data.decode()
-                print(currentMessage)
-                for numbRespone in re.findall(self.RE,currentMessage):
-                    if "376" in numbRespone:
-                        self.SOCK.send(("JOIN #%s\r\n" % self.CHANNEL).encode())
-            else:
-                pass        
+    def BlockToList(self,Block) -> list[str]:
+        listContainer : list[str] = Block.split("\r\n")
+        return listContainer
             
 
     # Actual execution of the parse calls a queue of the chat. If nothing in queue. pass
@@ -63,11 +63,9 @@ class Twitch:
             
             
     #Function will be repeatidly called. for parsing the string and getting the appropriate key.
-    def parseForCommand(self, Line: str) -> None:
+    #def parseForCommand(self, Line: str) -> None:
         
-        foundLine = re.search(Twitch.RE, Line)
-        if foundLine:
-            print(foundLine.group)
+        
 
 
 
