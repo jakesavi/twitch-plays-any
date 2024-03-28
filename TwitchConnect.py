@@ -39,11 +39,18 @@ class Twitch:
             lines = self.BlockToList(self.SOCK.recv(1024).decode())
             for line in lines:
                 LineParsed: list[str] = (line.split(' :'))
-                print(LineParsed[0])
+                #Sanitization below!
+                if LineParsed[0] == '':
+                    continue
+                if len(LineParsed) > 2:
+                    LineParsed = [LineParsed[0],''.join(LineParsed[1:])]
+                #Print line here!
+                print(LineParsed)
                 if '376' in LineParsed[0]:
                     self.SOCK.send(("JOIN #%s\r\n" % self.CHANNEL).encode())
-
-                
+                if 'PING' in LineParsed[0]:
+                    self.SOCK.send(('PONG :%s'%LineParsed[1]).encode())
+                    print('PONG :%s'%LineParsed[1])
 
     #After recieving the data, figure out parsing. Now we need to ensure we are readding chat.  
     #self.SOCK.send(("JOIN #%s\r\n" % self.CHANNEL).encode())  
@@ -53,15 +60,8 @@ class Twitch:
             
 
     # Actual execution of the parse calls a queue of the chat. If nothing in queue. pass
-    def ParcerAndButtonPresser(self) -> None:
-        #TODO
-        while True:
-            try:
-                self.QUEUE
-                
-            except:
-                pass
-            
+    def ButtonPresser():
+        pass
             
     #Function will be repeatidly called. for parsing the string and getting the appropriate key.
     #def parseForCommand(self, Line: str) -> None:
