@@ -2,7 +2,7 @@ import socket
 import time
 import random
 import threading
-import webbrowser
+
 
 
 class Twitch:
@@ -14,6 +14,11 @@ class Twitch:
     QUEUE : list[str]
     reciever : threading.Thread 
     executer: threading.Thread
+    ControllerLayout  = {"GameTitle" : "Pokemon Emerald",
+                         "Controls" : {'a':'left',
+                                       's':'down',
+                                       'd':'right',
+                                       'w':'up'}}
     def __init__(self) -> None:
         self.reciever= threading.Thread(target=self.recieve_message)
         
@@ -45,13 +50,16 @@ class Twitch:
                 if len(LineParsed) > 2:
                     LineParsed = [LineParsed[0],''.join(LineParsed[1:])]
                 #Print line here!
+                if len(LineParsed) != 2:
+                    LineParsed.append(' ')
                 print(LineParsed)
                 if '376' in LineParsed[0]:
                     self.SOCK.send(("JOIN #%s\r\n" % self.CHANNEL).encode())
                 if 'PING' in LineParsed[0]:
                     self.SOCK.send(('PONG :%s'%LineParsed[1]).encode())
                     print('PONG :%s'%LineParsed[1])
-
+                if 'PRIVMSG' in LineParsed[0] and LineParsed[1][0] == '!':
+                    self.ButtonPresser(LineParsed[1])
     #After recieving the data, figure out parsing. Now we need to ensure we are readding chat.  
     #self.SOCK.send(("JOIN #%s\r\n" % self.CHANNEL).encode())  
     def BlockToList(self,Block) -> list[str]:
@@ -60,11 +68,11 @@ class Twitch:
             
 
     # Actual execution of the parse calls a queue of the chat. If nothing in queue. pass
-    def ButtonPresser():
-        pass
+    def ButtonPresser(self, msg: str):
+        print('GOT HERE!')
+        
             
-    #Function will be repeatidly called. for parsing the string and getting the appropriate key.
-    #def parseForCommand(self, Line: str) -> None:
+    
         
         
 
