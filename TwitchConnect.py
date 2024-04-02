@@ -2,64 +2,69 @@ import socket
 import time
 import random
 import threading
-
+from TwitchPlays_KeyCodes import *
 
 
 class Twitch:
     SOCK: socket.socket
-    CHANNEL: str = "byte1223"
+    CHANNEL: str = "demolitiondaisy"
     # Connect to the IRC server utilizing socket connection. 
     CTOKEN: str = 'bm5jz15swcewiz2igffjr24h7ijkdl'
     #This queue is used by the executer thread.
     QUEUE : list[str]
     reciever : threading.Thread 
-    executer: threading.Thread
+   #keepMeAliveThread: threading.Thread
+    user: str = ""
     ControllerLayout  = {"GameTitle" : "Pokemon Emerald",
-                         "Controls" : {'a':'left',
-                                       's':'down',
-                                       'd':'right',
-                                       'w':'up'}}
+                         "Controls" : {'!left':J,
+                                       '!down':K,
+                                       '!right':L,
+                                       '!up':I,
+                                       '!b':Z,
+                                       '!a':X,
+                                       '!select':BACKSPACE,
+                                       '!start':ENTER}}
     def __init__(self) -> None:
         self.reciever= threading.Thread(target=self.recieve_message)
-        
     def twitch_connect(self) -> None:
         self.SOCK  = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("Connecting to Twitch...")
         # Specified twitch socket info.
         self.SOCK.connect(('irc.chat.twitch.tv', 6667))
         # Connect anonymously.
-        user : str = 'justinfan%i' % random.randrange(1,99999)
-        self.SOCK.send(('NICK %s\r\nPASS fakefan\r\n' % user).encode())
-        self.reciever.start()
-        
-        
+        self.user : str = 'justinfan%i' % random.randrange(1,99999)
+        self.SOCK.send(('NICK %s\r\nPASS fakefan\r\n' % self.user).encode())
+        self.recieve_message()
     #Reconnect to socket if disconnected for some reason.
-    def reconnect(self, delay: float = 1.0) -> None:
-        time.sleep(delay)
-        self.twitch_connect()
-        
-    # Recieves the message and acts accourding to the recieved command.
+        # Connect anonymously.
     def recieve_message(self)->None:
         while True:
-            lines = self.BlockToList(self.SOCK.recv(1024).decode())
+            try:
+                lines = self.BlockToList(self.SOCK.recv(4096).decode())
+            except Exception as e:
+                print("Something went fuckky wukki Disconnecting and reconnecting!")
+                self.SOCK.close()
+                self.twitch_connect()
             for line in lines:
+                line=line.strip()
                 LineParsed: list[str] = (line.split(' :'))
                 #Sanitization below!
-                if LineParsed[0] == '':
-                    continue
                 if len(LineParsed) > 2:
                     LineParsed = [LineParsed[0],''.join(LineParsed[1:])]
                 #Print line here!
+                print(LineParsed)
+                if 'PING' in LineParsed[0]:
+                    self.SOCK.send(('PONG :tmi.twitch.tv\r\n').encode())
                 if len(LineParsed) != 2:
                     LineParsed.append(' ')
-                print(LineParsed)
                 if '376' in LineParsed[0]:
                     self.SOCK.send(("JOIN #%s\r\n" % self.CHANNEL).encode())
-                if 'PING' in LineParsed[0]:
-                    self.SOCK.send(('PONG :%s'%LineParsed[1]).encode())
-                    print('PONG :%s'%LineParsed[1])
                 if 'PRIVMSG' in LineParsed[0] and LineParsed[1][0] == '!':
                     self.ButtonPresser(LineParsed[1])
+                
+                
+
+
     #After recieving the data, figure out parsing. Now we need to ensure we are readding chat.  
     #self.SOCK.send(("JOIN #%s\r\n" % self.CHANNEL).encode())  
     def BlockToList(self,Block) -> list[str]:
@@ -69,7 +74,11 @@ class Twitch:
 
     # Actual execution of the parse calls a queue of the chat. If nothing in queue. pass
     def ButtonPresser(self, msg: str):
-        print('GOT HERE!')
+        CommandDictionary : dict[str,str] = self.ControllerLayout.get("Controls")
+        if msg in CommandDictionary:
+            HoldAndReleaseKey(CommandDictionary[msg], .1)
+            
+
         
             
     
