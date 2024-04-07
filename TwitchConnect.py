@@ -75,7 +75,7 @@ class Twitch:
     # Actual execution of the parse calls a queue of the chat. If nothing in queue. pass
     def ButtonPresser(self, msg: str):
         CommandDictionary : dict[str,str] = self.ControllerLayout.get("Controls")
-        if msg in CommandDictionary:
+        if msg.lower() in CommandDictionary:
             HoldAndReleaseKey(CommandDictionary[msg], .1)
             
 
